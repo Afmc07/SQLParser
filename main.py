@@ -2,33 +2,42 @@ import mysql.connector
 from validator import Validator
 from converter import SQL_TO_ALGEBRA
 
+backup_table_names = ['categoria', 'contas',
+                      'movimentacao', 'tipoconta', 'tipomovimento', 'usuario']
+backup_column_names = {'categoria': ['idCategoria', 'DescCategoria'], 'contas': ['idConta', 'Descricao', 'TipoConta_idTipoConta', 'Usuario_idUsuario', 'SaldoInicial'], 'movimentacao': ['idMovimentacao', 'DataMovimentacao', 'Descricao', 'TipoMovimento_idTipoMovimento',
+                                                                                                                                                                                         'Categoria_idCategoria', 'Contas_idConta', 'Valor'], 'tipoconta': ['idTipoConta', 'Descrição'], 'tipomovimento': ['idTipoMovimento', 'DescMovimentacao'], 'usuario': ['idUsuario', 'Nome', 'Logradouro', 'Número', 'Bairro', 'CEP', 'UF', 'DataNascimento']}
+
 
 def setup():
-    mydb = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Jrp-25-Afm07",  # MUDAR PARA SENHA DO ROOT USER
-        database="exercicios"
-    )
-    mycursor = mydb.cursor()
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="Jrp-25-Afm0X",  # MUDAR PARA SENHA DO ROOT USER
+            database="exercicios"
+        )
+        mycursor = mydb.cursor()
 
-    mycursor.execute("Show tables;")
-    database_tables = mycursor.fetchall()
-    table_names = list()
+        mycursor.execute("Show tables;")
+        database_tables = mycursor.fetchall()
+        table_names = list()
 
-    for (table_name,) in database_tables:
-        table_names.append(table_name)
+        for (table_name,) in database_tables:
+            table_names.append(table_name)
 
-    column_names = dict()
-    for name in table_names:
-        mycursor.execute(f'Show columns from {name};')
-        table_columns = mycursor.fetchall()
-        column_names[name] = list()
-        for (column_name, _, _, _, _, _) in table_columns:
-            column_names[name].append(column_name)
-
-    global validator
-    validator = Validator(table_names, column_names)
+        column_names = dict()
+        for name in table_names:
+            mycursor.execute(f'Show columns from {name};')
+            table_columns = mycursor.fetchall()
+            column_names[name] = list()
+            for (column_name, _, _, _, _, _) in table_columns:
+                column_names[name].append(column_name)
+    except:
+        table_names = backup_table_names
+        column_names = backup_column_names
+    finally:
+        global validator
+        validator = Validator(table_names, column_names)
 
 
 def verify_and_fix_list_spacings(query_list):
