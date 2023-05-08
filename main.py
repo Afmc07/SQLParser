@@ -1,13 +1,20 @@
 import mysql.connector
 from validator import Validator
 from converter import SQL_TO_ALGEBRA
+from tree_generator import gera_arvore
+from PySimpleGUI import PySimpleGUI as psg
+
+layout = [
+    [psg.Text('Comando SQL:'), psg.Input(key='query'), psg.Button('Confirma', key='confirm')],
+    [psg.Output(size=(150, 20), key='output')]
+]
 
 
 def setup():
     mydb = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="Jrp-25-Afm07",  # MUDAR PARA SENHA DO ROOT USER
+        password="6172",  # MUDAR PARA SENHA DO ROOT USER
         database="exercicios"
     )
     mycursor = mydb.cursor()
@@ -67,7 +74,7 @@ def onQuerySubmit(query: str):
         if validator.validation_status:
             relational_algebra = SQL_TO_ALGEBRA(validator.select_section, validator.join_sections,
                                                 validator.where_sections, validator.existing_columns)
-            # generate_tree(relational_algebra)
+            gera_arvore(relational_algebra)
             return relational_algebra
         else:
             return validator.error_message
@@ -80,9 +87,19 @@ query = "SELECT nome, datanascimento, descricao, saldoinicial FROM usuario JOIN 
 query2 = "SELECT nome, datanascimento, descricao, saldoinicial FROM usuario WHERE saldoinicial >= 235 AND uf = 'ce' AND cep <> '62930000'"
 query3 = "SELECT * FROM usuario JOIN contas ON usuario.idUsuario = contas.Usuario_idUsuario"
 query4 = "SELECT * FROM usuario WHERE saldoinicial >= 235 AND uf = 'ce' AND cep <> '629300001'"
-query5 = "SELECT idusuario, nome, datanascimento, descricao, saldoinicial, UF, Descrição FROM usuario JOIN contas ON usuario.idUsuario = contas.Usuario_idUsuario JOIN tipoconta ON tipoconta.idTipoConta = contas.TipoConta_idTipoConta WHERE saldoinicial < 3000 AND uf = 'ce' AND Descrição <> 'Conta Corrente' AND idusuario > 3"
+query5 = "SELECT idusuario, nome, datanascimento, descricao, saldoinicial, UF, Descrição FROM usuario JOIN contas ON usuario.idUsuario = contas.Usuario_idUsuario JOIN tipoconta ON tipoconta.idTipoConta = contas.TipoConta_idTipoConta"
 badquery = "SELECT * FROM usuario SELECT contas ON usuario.idUsuario = contas.Usuario_idUsuario"
 badquery2 = "JOIN * FROM usuario SELECT contas ON usuario.idUsuario = contas.Usuario_idUsuario"
 badquery3 = "SELECT * FROM usuario JOIN = ON usuario.idUsuario = contas.Usuario_idUsuario"
 
-print(onQuerySubmit(query5))
+
+window = psg.Window('SQL Processor', layout)
+
+while True:
+    events, values = window.read()
+    if events == 'confirm':
+        window['output'].update(value='')  # Limpa a caixa de texto
+        print("Algebra: "+onQuerySubmit(values['query']))
+    elif events == psg.WIN_CLOSED:  # Window close button event
+        break
+
